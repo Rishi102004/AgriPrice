@@ -1,13 +1,12 @@
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
-  MapPin, Bell, MessageCircle, TrendingUp, TrendingDown,
+  MapPin, MessageCircle, TrendingUp, TrendingDown,
   Wheat
 } from 'lucide-react';
-import { YESTERDAY_PRICES, getPriceChange } from '@/lib/mockData';
 import { useAuth } from '@/lib/AuthContext';
-import { useAlerts } from '@/lib/AlertsContext';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useApi } from '@/lib/useApi';
 
 const GREETINGS: Record<string, string[]> = {
   en: ['Good Morning', 'Good Afternoon', 'Good Evening'],
@@ -26,29 +25,24 @@ function getGreeting(lang: string): string {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { alerts } = useAlerts();
   const { t, language } = useLanguage();
-  const navigate = useNavigate();
-  const activeAlerts = alerts.filter((a) => a.is_active).length;
+  const { commodities, mandis, prices, loading, getPriceChange } = useApi();
 
-  if (!user) return null;
+  if (!user || loading) return <div style={{ padding: 20, textAlign: 'center' }}>Loading...</div>;
 
   const greeting = getGreeting(language === 'hi' ? 'hi' : user.language);
-  const homeMandi = MANDIS.find((m) => m.id === user.home_mandi_id) ?? MANDIS[0];
+  const homeMandi = mandis.find((m: any) => m.id === user.home_mandi_id) ?? mandis[0];
 
   // Build commodity price rows for home mandi
-  const priceRows = COMMODITIES.map((c) => {
-    const today = TODAY_PRICES.find(
-      (p) => p.commodity_id === c.id && p.mandi_id === homeMandi.id
-    );
-    const changePct = getPriceChange(c.id, homeMandi.id);
-    const yesterdayKey = `${c.id}-${homeMandi.id}`;
-    const yesterday = YESTERDAY_PRICES[yesterdayKey];
+  const priceRows = commodities.map((c: any) => {
+    const commodityPrices = prices.filter(p => p.commodity_id === c.id && p.mandi_id === homeMandi?.id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const today = commodityPrices[0];
+    const changePct = getPriceChange(c.id, homeMandi?.id);
+    
     return {
       commodity: c,
       today,
       changePct,
-      yesterday,
     };
   });
 

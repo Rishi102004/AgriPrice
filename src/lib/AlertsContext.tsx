@@ -1,51 +1,86 @@
 // ─── Alerts Context ───────────────────────────────────────────────────────────
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { PriceAlert } from './mockData';
-import { STORAGE_KEYS } from './mockData';
+import { useAuth } from './AuthContext';
+
+export interface PriceAlert {
+  id: string;
+  user_id: string;
+  commodity_id: string;
+  mandi_id: string;
+  target_price: number;
+  condition: 'above' | 'below';
+  is_active: boolean;
+  createdAt: string;
+}
 
 interface AlertsContextType {
   alerts: PriceAlert[];
-  addAlert: (alert: Omit<PriceAlert, 'id' | 'created_at'>) => void;
-  toggleAlert: (id: string) => void;
-  deleteAlert: (id: string) => void;
+  addAlert: (alert: Omit<PriceAlert, 'id' | 'createdAt' | 'user_id' | 'is_active'>) => Promise<void>;
+  toggleAlert: (id: string) => Promise<void>;
+  deleteAlert: (id: string) => Promise<void>;
 }
 
 const AlertsContext = createContext<AlertsContextType | null>(null);
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.ALERTS);
-    if (stored) {
-      try {
-        setAlerts(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem(STORAGE_KEYS.ALERTS);
-      }
+    if (user) {
+      fetch(`http://localhost:5000/api/alerts/user/${user.id}`)
+        .then(res => res.json())
+        .then(data => setAlerts(data))
+        .catch(console.error);
+    } else {
+      setAlerts([]);
     }
-  }, []);
+  }, [user]);
 
-  const save = (updated: PriceAlert[]) => {
-    setAlerts(updated);
-    localStorage.setItem(STORAGE_KEYS.ALERTS, JSON.stringify(updated));
+  const addAlert = async (alert: Omit<PriceAlert, 'id' | 'createdAt' | 'user_id' | 'is_active'>) => {
+    if (!user) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...alert, user_id: user.id })
+      });
+      if (res.ok) {
+        const newAlert = await res.json();
+        setAlerts([...alerts, newAlert]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const addAlert = (alert: Omit<PriceAlert, 'id' | 'created_at'>) => {
-    const newAlert: PriceAlert = {
-      ...alert,
-      id: `alert-${Date.now()}`,
-      created_at: new Date().toISOString(),
-    };
-    save([...alerts, newAlert]);
+  const toggleAlert = async (id: string) => {
+    const alert = alerts.find(a => a.id === id);
+    if (!alert) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/alerts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !alert.is_active })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setAlerts(alerts.map(a => a.id === id ? updated : a));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const toggleAlert = (id: string) => {
-    save(alerts.map((a) => (a.id === id ? { ...a, is_active: !a.is_active } : a)));
-  };
-
-  const deleteAlert = (id: string) => {
-    save(alerts.filter((a) => a.id !== id));
+  const deleteAlert = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/alerts/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setAlerts(alerts.filter(a => a.id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -55,6 +90,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAlerts() {
   const ctx = useContext(AlertsContext);
   if (!ctx) throw new Error('useAlerts must be used inside AlertsProvider');

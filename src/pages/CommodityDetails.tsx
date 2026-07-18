@@ -7,12 +7,10 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import {
-  COMMODITIES, MANDIS, TODAY_PRICES, generateHistoricalPrices,
-  getBestMandiForCommodity, getPriceChange, getCommodityById
-} from '@/lib/mockData';
+import { generateHistoricalPrices } from '@/lib/mockData';
 import { useAlerts } from '@/lib/AlertsContext';
 import { useAuth } from '@/lib/AuthContext';
+import { useApi } from '@/lib/useApi';
 
 type Range = '7d' | '30d' | '1y';
 
@@ -20,15 +18,20 @@ const RANGE_DAYS: Record<Range, number> = { '7d': 7, '30d': 30, '1y': 365 };
 
 export default function CommodityDetails() {
   const { id } = useParams<{ id: string }>();
-  const commodity = getCommodityById(id ?? '');
   const { addAlert } = useAlerts();
   const { user } = useAuth();
+  const { commodities, mandis, prices, loading } = useApi();
+  const commodity = commodities.find((c: any) => c.id === id);
 
   const [range, setRange] = useState<Range>('30d');
   const [alertType, setAlertType] = useState<'above' | 'below'>('above');
-  const [alertMandi, setAlertMandi] = useState(MANDIS[0].id);
+  const [alertMandi, setAlertMandi] = useState('');
   const [alertPrice, setAlertPrice] = useState('');
   const [alertSaved, setAlertSaved] = useState(false);
+
+  if (loading) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
+  }
 
   if (!commodity) {
     return (
@@ -40,22 +43,27 @@ export default function CommodityDetails() {
     );
   }
 
-  const prices = TODAY_PRICES.filter((p) => p.commodity_id === id);
-  const bestMandi = getBestMandiForCommodity(id!);
-  const basePrice = prices[0]?.price ?? 2000;
+  const commodityPrices = prices.filter((p: any) => p.commodity_id === id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const todaysPrices = commodityPrices.filter((p: any) => p.date === commodityPrices[0]?.date);
+  
+  // Find the highest price today across all mandis
+  let bestMandi = null;
+  if (todaysPrices.length > 0) {
+    const highest = todaysPrices.reduce((prev: any, current: any) => (prev.price > current.price) ? prev : current);
+    const m = mandis.find((m: any) => m.id === highest.mandi_id);
+    if (m) bestMandi = { mandi: m, price: highest };
+  }
+
+  const basePrice = commodityPrices[0]?.price ?? 2000;
   const historicalData = generateHistoricalPrices(basePrice, RANGE_DAYS[range], 0.05);
-  const changePct = getPriceChange(id!, MANDIS[0].id);
-  const up = changePct >= 0;
 
   const handleAlertSave = () => {
     if (!alertPrice || !user) return;
     addAlert({
-      user_id: user.id,
       commodity_id: id!,
-      mandi_id: alertMandi || null,
-      threshold_price: parseFloat(alertPrice),
-      alert_type: alertType,
-      is_active: true,
+      mandi_id: alertMandi || mandis[0]?.id || '',
+      target_price: parseFloat(alertPrice),
+      condition: alertType,
     });
     setAlertSaved(true);
     setTimeout(() => setAlertSaved(false), 3000);
@@ -209,9 +217,9 @@ export default function CommodityDetails() {
               Prices Across Mandis
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {prices.map((p) => {
-                const mandi = MANDIS.find((m) => m.id === p.mandi_id);
-                const isBest = p.price === Math.max(...prices.map((px) => px.price));
+              {todaysPrices.map((p: any) => {
+                const mandi = mandis.find((m: any) => m.id === p.mandi_id);
+                const isBest = p.price === Math.max(...todaysPrices.map((px: any) => px.price));
                 return (
                   <div
                     key={p.id}
@@ -257,7 +265,7 @@ export default function CommodityDetails() {
                 onChange={(e) => setAlertMandi(e.target.value)}
                 id="alert-mandi-select"
               >
-                {MANDIS.map((m) => (
+                {mandis.map((m: any) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>

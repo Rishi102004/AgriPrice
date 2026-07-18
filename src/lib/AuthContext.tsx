@@ -15,7 +15,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (phone: string, name: string, language: string) => Promise<void>;
   logout: () => void;
-  updateProfile: (updates: Partial<UserProfile>) => void;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,15 +33,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (phone: string, name: string, language: string) => {
-    // Simulated delay for OTP verification
-    const newUser: UserProfile = {
-      ...DEFAULT_MOCK_USER,
-      phone,
-      name,
-      language,
-    };
-    setUser(newUser);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+      if (!res.ok) throw new Error('Login failed');
+      const userData = await res.json();
+      setUser(userData);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const logout = () => {
@@ -49,11 +53,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEYS.USER);
   };
 
-  const updateProfile = (updates: Partial<UserProfile>) => {
+  const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) return;
-    const updated = { ...user, ...updates };
-    setUser(updated);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated));
+    try {
+      const res = await fetch(`http://localhost:5000/api/auth/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUser(updated);
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.error('Failed to update profile', err);
+    }
   };
 
   return (
@@ -63,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

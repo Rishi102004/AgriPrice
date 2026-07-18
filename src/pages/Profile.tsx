@@ -1,7 +1,7 @@
 // ─── Profile Page ──────────────────────────────────────────────────────────────
 import { useState } from 'react';
 import { User, Phone, Globe, MapPin, Save, Check, Bell, BellOff, Trash2, ShieldCheck } from 'lucide-react';
-import { MANDIS, COMMODITIES, getCommodityById, getMandiById } from '@/lib/mockData';
+import { MANDIS, getCommodityById, getMandiById } from '@/lib/mockData';
 import { useAuth } from '@/lib/AuthContext';
 import { useAlerts } from '@/lib/AlertsContext';
 
@@ -32,7 +32,6 @@ export default function Profile() {
   };
 
   const activeAlerts = alerts.filter((a) => a.is_active);
-  const pausedAlerts = alerts.filter((a) => !a.is_active);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -64,7 +63,7 @@ export default function Profile() {
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 20, color: '#f0fdf4' }}>{user.name}</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{user.email}</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{user.phone}</div>
               <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center', gap: 8 }}>
                 <span className="badge badge-green">
                   <ShieldCheck size={11} /> Verified Farmer

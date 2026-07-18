@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import {
   TrendingUp, MapPin, Bell, MessageCircle, BarChart2, Shield,
-  ArrowRight, Leaf, ChevronRight, Star
+  ArrowRight, Leaf, ChevronRight
 } from 'lucide-react';
 import { COMMODITIES, MANDIS, TODAY_PRICES } from '@/lib/mockData';
 
