@@ -125,7 +125,7 @@ export default function AgriBot() {
           <div key={i} style={{ marginBottom: 2 }}>
             {parts.map((part, j) =>
               j % 2 === 1 ? (
-                <strong key={j} style={{ color: '#15803d' }}>
+                <strong key={j} style={{ color: '#0ea5e9' }}>
                   {part}
                 </strong>
               ) : (
@@ -152,14 +152,14 @@ export default function AgriBot() {
           width: 58,
           height: 58,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #15803d, #059669)',
+          background: 'linear-gradient(135deg, #10b981, #0ea5e9)',
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 999,
-          boxShadow: '0 6px 30px rgba(21, 128, 61, 0.5)',
+          boxShadow: '0 6px 30px rgba(14, 165, 233, 0.4)',
           transition: 'all 0.3s ease',
           transform: open ? 'scale(0.95)' : 'scale(1)',
         }}
@@ -198,8 +198,8 @@ export default function AgriBot() {
           <div
             style={{
               padding: '14px 18px',
-              background: 'linear-gradient(135deg, #15803d, #059669)',
-              borderBottom: '1px solid rgba(34, 197, 94, 0.15)',
+              background: 'linear-gradient(135deg, #10b981, #0ea5e9)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
               alignItems: 'center',
               gap: 10,
@@ -210,7 +210,8 @@ export default function AgriBot() {
                 width: 38,
                 height: 38,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #15803d, #059669)',
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(4px)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -308,10 +309,10 @@ export default function AgriBot() {
                   key={s}
                   onClick={() => sendMessage(s)}
                   style={{
-                    background: 'rgba(21, 128, 61, 0.05)',
-                    border: '1px solid rgba(34, 197, 94, 0.2)',
+                    background: 'rgba(14, 165, 233, 0.08)',
+                    border: '1px solid rgba(14, 165, 233, 0.2)',
                     borderRadius: 20,
-                    color: '#15803d',
+                    color: '#0284c7',
                     fontSize: 12,
                     padding: '5px 12px',
                     cursor: 'pointer',
@@ -348,8 +349,8 @@ export default function AgriBot() {
               style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
-                background: isListening ? '#f87171' : 'rgba(34, 197, 94, 0.08)',
+                borderRadius: '50%',
+                background: isListening ? '#f43f5e' : 'rgba(14, 165, 233, 0.1)',
                 border: 'none',
                 cursor: 'pointer',
                 display: 'flex',
@@ -361,7 +362,7 @@ export default function AgriBot() {
               }}
               title="Voice Input"
             >
-              <Mic size={16} color={isListening ? 'white' : '#4b5563'} />
+              <Mic size={18} color={isListening ? 'white' : '#0ea5e9'} />
             </button>
             <button
               onClick={() => sendMessage(input)}
@@ -369,10 +370,8 @@ export default function AgriBot() {
               style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
-                background: input.trim()
-                  ? 'linear-gradient(135deg, #15803d, #059669)'
-                  : 'rgba(34, 197, 94, 0.08)',
+                borderRadius: '50%',
+                background: input.trim() ? 'linear-gradient(135deg, #10b981, #0ea5e9)' : 'var(--color-surface2)',
                 border: 'none',
                 cursor: input.trim() ? 'pointer' : 'not-allowed',
                 display: 'flex',
