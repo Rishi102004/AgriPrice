@@ -10,16 +10,19 @@ const LANGUAGES = [
   { value: 'hi', label: 'Hindi', native: 'हिंदी' },
   { value: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ' },
 ];
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
   const { alerts, toggleAlert, deleteAlert } = useAlerts();
+  const { t } = useLanguage();
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState({
     name: user?.name ?? '',
     phone: user?.phone ?? '',
     language: user?.language ?? 'en',
     home_mandi_id: user?.home_mandi_id ?? MANDIS[0].id,
+    state: user?.state ?? '',
     district: user?.district ?? '',
   });
 
@@ -36,8 +39,8 @@ export default function Profile() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       <div className="page-container">
-        <h1 className="section-title">My Profile</h1>
-        <p className="section-subtitle">Manage your account settings and preferences</p>
+        <h1 className="section-title">{t('My Profile')}</h1>
+        <p className="section-subtitle">{t('Manage your account settings and preferences')}</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {/* ── LEFT COLUMN ── */}
@@ -62,22 +65,22 @@ export default function Profile() {
               >
                 {user.name.charAt(0).toUpperCase()}
               </div>
-              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 20, color: '#f0fdf4' }}>{user.name}</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{user.phone}</div>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 20, color: 'var(--color-text-primary)' }}>{user.name}</div>
+              <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>{user.phone}</div>
               <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center', gap: 8 }}>
                 <span className="badge badge-green">
-                  <ShieldCheck size={11} /> Verified Farmer
+                  <ShieldCheck size={11} /> {t('Verified Farmer')}
                 </span>
               </div>
               <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, borderTop: '1px solid rgba(34,197,94,0.1)', paddingTop: 14 }}>
                 {[
-                  { label: 'Alerts', value: alerts.length },
-                  { label: 'Active', value: activeAlerts.length },
-                  { label: 'Lang', value: user.language.toUpperCase() },
+                  { label: t('Alerts'), value: alerts.length },
+                  { label: t('active alerts').split(' ')[0], value: activeAlerts.length },
+                  { label: t('Lang'), value: user.language.toUpperCase() },
                 ].map((s) => (
                   <div key={s.label}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#4ade80' }}>{s.value}</div>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>{s.label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-forest)' }}>{s.value}</div>
+                    <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -85,49 +88,57 @@ export default function Profile() {
 
             {/* Edit Form */}
             <div className="glass-card" style={{ padding: '24px' }}>
-              <h3 style={{ margin: '0 0 20px', fontWeight: 700, fontSize: 16, color: '#f0fdf4' }}>
-                Personal Information
+              <h3 style={{ margin: '0 0 20px', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)' }}>
+                {t('Personal Information')}
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
-                    <User size={13} style={{ display: 'inline', marginRight: 4 }} /> Full Name
+                  <label style={{ fontSize: 13, color: 'var(--color-forest)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                    <User size={13} style={{ display: 'inline', marginRight: 4 }} /> {t('Full Name')}
                   </label>
                   <input
                     id="profile-name"
                     className="input-field"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="Your name"
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
-                    <Phone size={13} style={{ display: 'inline', marginRight: 4 }} /> Phone Number
+                  <label style={{ fontSize: 13, color: 'var(--color-forest)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                    <Phone size={13} style={{ display: 'inline', marginRight: 4 }} /> {t('Phone Number')}
                   </label>
                   <input
                     id="profile-phone"
                     className="input-field"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+91 98765 43210"
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
-                    <MapPin size={13} style={{ display: 'inline', marginRight: 4 }} /> District
+                  <label style={{ fontSize: 13, color: 'var(--color-forest)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                    <MapPin size={13} style={{ display: 'inline', marginRight: 4 }} /> {t('State')}
+                  </label>
+                  <input
+                    id="profile-state"
+                    className="input-field"
+                    value={form.state}
+                    onChange={(e) => setForm({ ...form, state: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, color: 'var(--color-forest)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                    <MapPin size={13} style={{ display: 'inline', marginRight: 4 }} /> {t('District')}
                   </label>
                   <input
                     id="profile-district"
                     className="input-field"
                     value={form.district}
                     onChange={(e) => setForm({ ...form, district: e.target.value })}
-                    placeholder="Pune, Bangalore, Delhi..."
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
-                    🏪 Home Mandi
+                  <label style={{ fontSize: 13, color: 'var(--color-forest)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                    🏪 {t('Home Mandi')}
                   </label>
                   <select
                     id="profile-home-mandi"
@@ -141,8 +152,8 @@ export default function Profile() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 8 }}>
-                    <Globe size={13} style={{ display: 'inline', marginRight: 4 }} /> Preferred Language
+                  <label style={{ fontSize: 13, color: 'var(--color-forest)', fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                    <Globe size={13} style={{ display: 'inline', marginRight: 4 }} /> {t('Preferred Language')}
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                     {LANGUAGES.map((l) => (
@@ -191,7 +202,7 @@ export default function Profile() {
                     transition: 'all 0.3s',
                   }}
                 >
-                  {saved ? <><Check size={16} /> Saved!</> : <><Save size={16} /> Save Changes</>}
+                  {saved ? <><Check size={16} /> {t('Saved!')}</> : <><Save size={16} /> {t('Save Changes')}</>}
                 </button>
               </div>
             </div>
@@ -200,8 +211,8 @@ export default function Profile() {
           {/* ── RIGHT COLUMN — ALERTS ── */}
           <div>
             <div className="glass-card" style={{ padding: '24px' }}>
-              <h3 style={{ margin: '0 0 20px', fontWeight: 700, fontSize: 16, color: '#f0fdf4', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Bell size={16} color="#f59e0b" /> My Price Alerts
+              <h3 style={{ margin: '0 0 20px', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Bell size={16} color="#f59e0b" /> {t('My Price Alerts')}
                 {alerts.length > 0 && (
                   <span className="badge badge-amber" style={{ marginLeft: 4, fontSize: 12 }}>{alerts.length}</span>
                 )}
@@ -210,7 +221,7 @@ export default function Profile() {
               {alerts.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 16px', color: '#64748b' }}>
                   <Bell size={36} color="#374151" style={{ marginBottom: 10 }} />
-                  <p style={{ fontSize: 14 }}>No alerts yet. Visit any crop page to set a price alert.</p>
+                  <p style={{ fontSize: 14 }}>{t('No alerts yet. Visit any crop page to set a price alert.')}</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -238,12 +249,12 @@ export default function Profile() {
                           <div style={{ fontWeight: 600, fontSize: 14, color: '#f0fdf4' }}>
                             {commodity.name}
                             {' '}
-                            <span style={{ color: alert.alert_type === 'above' ? '#4ade80' : '#f87171', fontSize: 12 }}>
-                              {alert.alert_type === 'above' ? '↑' : '↓'} ₹{alert.threshold_price}
+                            <span style={{ color: alert.condition === 'above' ? '#4ade80' : '#f87171', fontSize: 12 }}>
+                              {alert.condition === 'above' ? '↑' : '↓'} ₹{alert.target_price}
                             </span>
                           </div>
                           <div style={{ fontSize: 12, color: '#64748b' }}>
-                            {mandi ? mandi.name.split(' (')[0] : 'Any mandi'} · /{commodity.unit}
+                            {mandi ? mandi.name.split(' (')[0] : t('Any mandi')} · /{commodity.unit}
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>

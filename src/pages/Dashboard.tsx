@@ -30,7 +30,7 @@ export default function Dashboard() {
 
   if (!user || loading) return <div style={{ padding: 20, textAlign: 'center' }}>Loading...</div>;
 
-  const greeting = getGreeting(language === 'hi' ? 'hi' : user.language);
+  const greeting = getGreeting(language);
   const homeMandi = mandis.find((m: any) => m.id === user.home_mandi_id) ?? mandis[0];
 
   // Build commodity price rows for home mandi
@@ -210,10 +210,10 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
             {[
-              { label: t('Highest Gainer'), value: `${language === 'hi' ? 'गेहूँ' : 'Wheat'} +2.3%`, color: '#16a34a', icon: <TrendingUp size={20} color="#16a34a"/>, bg: 'rgba(34, 197, 94, 0.1)' },
-              { label: t('Biggest Loser'), value: `${language === 'hi' ? 'बाजरा' : 'Bajra'} -1.6%`, color: '#ef4444', icon: <TrendingDown size={20} color="#ef4444"/>, bg: 'rgba(248, 113, 113, 0.1)' },
-              { label: t('Best to Sell'), value: `${language === 'hi' ? 'मक्का' : 'Maize'} (₹2150)`, color: '#fbbf24', icon: <MapPin size={20} color="#fbbf24"/>, bg: 'rgba(245, 158, 11, 0.1)' },
-              { label: t('Sentiment'), value: `📈 ${language === 'hi' ? 'तेजी' : 'Bullish'}`, color: '#a855f7', icon: <MessageCircle size={20} color="#a855f7"/>, bg: 'rgba(168, 85, 247, 0.1)' },
+              { label: t('Highest Gainer'), value: `${language === 'hi' ? 'गेहूँ' : language === 'kn' ? 'ಗೋದಧಿ' : 'Wheat'} +2.3%`, color: '#16a34a', icon: <TrendingUp size={20} color="#16a34a"/>, bg: 'rgba(34, 197, 94, 0.1)' },
+              { label: t('Biggest Loser'), value: `${language === 'hi' ? 'बाजरा' : language === 'kn' ? 'ಸಜ್ಜೆ' : 'Bajra'} -1.6%`, color: '#ef4444', icon: <TrendingDown size={20} color="#ef4444"/>, bg: 'rgba(248, 113, 113, 0.1)' },
+              { label: t('Best to Sell'), value: `${language === 'hi' ? 'मक्का' : language === 'kn' ? 'ಮೆಕ್ಕೆಜೋಳ' : 'Maize'} (₹2150)`, color: '#fbbf24', icon: <MapPin size={20} color="#fbbf24"/>, bg: 'rgba(245, 158, 11, 0.1)' },
+              { label: t('Sentiment'), value: `📈 ${language === 'hi' ? 'तेजी' : language === 'kn' ? 'ಬುಲ್ಲಿಶ್' : 'Bullish'}`, color: '#a855f7', icon: <MessageCircle size={20} color="#a855f7"/>, bg: 'rgba(168, 85, 247, 0.1)' },
             ].map((item) => (
               <div 
                 key={item.label} 

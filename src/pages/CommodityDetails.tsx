@@ -11,6 +11,7 @@ import { generateHistoricalPrices } from '@/lib/mockData';
 import { useAlerts } from '@/lib/AlertsContext';
 import { useAuth } from '@/lib/AuthContext';
 import { useApi } from '@/lib/useApi';
+import { useLanguage } from '@/lib/LanguageContext';
 
 type Range = '7d' | '30d' | '1y';
 
@@ -21,6 +22,7 @@ export default function CommodityDetails() {
   const { addAlert } = useAlerts();
   const { user } = useAuth();
   const { commodities, mandis, prices, loading } = useApi();
+  const { t, language } = useLanguage();
   const commodity = commodities.find((c: any) => c.id === id);
 
   const [range, setRange] = useState<Range>('30d');
@@ -37,8 +39,8 @@ export default function CommodityDetails() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: 48 }}>🌾</div>
-        <p style={{ color: 'var(--color-text-secondary)' }}>Commodity not found.</p>
-        <Link to="/home" className="btn-primary">Back to Dashboard</Link>
+        <p style={{ color: 'var(--color-text-secondary)' }}>{t('Commodity not found.')}</p>
+        <Link to="/home" className="btn-primary">{t('Back to Dashboard')}</Link>
       </div>
     );
   }
@@ -101,7 +103,7 @@ export default function CommodityDetails() {
             color: 'var(--color-text-secondary)', textDecoration: 'none', fontSize: 14, marginBottom: 24,
           }}
         >
-          <ArrowLeft size={16} /> Back to Dashboard
+          <ArrowLeft size={16} /> {t('Back to Dashboard')}
         </Link>
 
         {/* ── HEADER ── */}
@@ -126,7 +128,7 @@ export default function CommodityDetails() {
             <div className="glass-card" style={{ padding: '14px 18px', display: 'flex', gap: 10, alignItems: 'center' }}>
               <Star size={16} color="#fbbf24" fill="#fbbf24" />
               <div>
-                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Best Price Today</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{t('Best Price Today')}</div>
                 <div style={{ fontWeight: 700, fontSize: 18, color: '#16a34a' }}>
                   ₹{bestMandi.price.price}/{commodity.unit}
                 </div>
@@ -141,9 +143,9 @@ export default function CommodityDetails() {
           <div className="glass-card" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-text-primary)' }}>Price History</div>
+                <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-text-primary)' }}>{t('Price History')}</div>
                 <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                  {range === '7d' ? 'Last 7 days' : range === '30d' ? 'Last 30 days' : 'Last 1 year'}
+                  {range === '7d' ? t('Last 7 days') : range === '30d' ? t('Last 30 days') : t('Last 1 year')}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -214,7 +216,7 @@ export default function CommodityDetails() {
           <div className="glass-card" style={{ padding: '20px' }}>
             <h3 style={{ margin: '0 0 16px', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)' }}>
               <MapPin size={15} style={{ display: 'inline', marginRight: 6, color: '#16a34a' }} />
-              Prices Across Mandis
+              {t('Prices Across Mandis')}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {todaysPrices.map((p: any) => {
@@ -239,7 +241,7 @@ export default function CommodityDetails() {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                       <span style={{ fontWeight: 700, color: isBest ? '#16a34a' : 'var(--color-text-primary)' }}>₹{p.price}</span>
-                      {isBest && <span className="badge badge-green" style={{ fontSize: 10 }}>Best</span>}
+                      {isBest && <span className="badge badge-green" style={{ fontSize: 10 }}>{t('Best')}</span>}
                     </div>
                   </div>
                 );
@@ -251,13 +253,13 @@ export default function CommodityDetails() {
         {/* ── PRICE ALERT FORM ── */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <h3 style={{ margin: '0 0 16px', fontWeight: 700, fontSize: 17, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Bell size={18} color="#f59e0b" /> Set Price Alert for {commodity.name}
+            <Bell size={18} color="#f59e0b" /> {t('Set Price Alert for')} {language === 'hi' ? commodity.name_hi : language === 'kn' ? commodity.name_kn : commodity.name}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
             {/* Mandi Select */}
             <div>
               <label style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                Select Mandi
+                {t('Select Mandi')}
               </label>
               <select
                 className="select-field"
@@ -274,7 +276,7 @@ export default function CommodityDetails() {
             {/* Alert Type */}
             <div>
               <label style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                Alert Type
+                {t('Alert Type')}
               </label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['above', 'below'] as const).map((t) => (
@@ -303,7 +305,7 @@ export default function CommodityDetails() {
             {/* Price Input */}
             <div>
               <label style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                Target Price (₹/{commodity.unit})
+                {t('Target Price')} (₹/{commodity.unit})
               </label>
               <input
                 id="alert-price-input"
@@ -341,9 +343,9 @@ export default function CommodityDetails() {
                 }}
               >
                 {alertSaved ? (
-                  <><Check size={16} /> Alert Saved!</>
+                  <><Check size={16} /> {t('Alert Saved!')}</>
                 ) : (
-                  <><Bell size={16} /> Set Alert</>
+                  <><Bell size={16} /> {t('Set Alert')}</>
                 )}
               </button>
             </div>

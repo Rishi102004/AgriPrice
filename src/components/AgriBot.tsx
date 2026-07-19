@@ -1,7 +1,6 @@
-// ─── AgriBot Floating Chatbot ──────────────────────────────────────────────────
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, Mic } from 'lucide-react';
-import { generateBotResponse } from '@/lib/mockData';
+import { useLanguage } from '@/lib/LanguageContext';
 
 // Polyfill definitions for Web Speech API
 declare global {
@@ -32,18 +31,18 @@ const STARTERS_HI = [
 ];
 
 export default function AgriBot() {
+  const { t, language, setLanguage: setGlobalLanguage } = useLanguage();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
-      text: "🙏 Hello! I'm **AgriMandiBot**. Ask me about mandi prices, crop tips, or alerts — in English, Hindi, or Kannada!",
+      text: `🙏 Hello! I'm **${t('AgriMandiBot')}**. ${t('Chat in Hindi or English')}`,
       isUser: false,
       ts: new Date(),
     },
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
-  const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [isListening, setIsListening] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -59,18 +58,38 @@ export default function AgriBot() {
     setInput('');
     setTyping(true);
 
-    // Simulate processing delay
-    await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
-
-    const response = generateBotResponse(text);
-    const botMsg: Message = {
-      id: `b-${Date.now()}`,
-      text: response.text,
-      isUser: false,
-      ts: new Date(),
-    };
-    setMessages((prev) => [...prev, botMsg]);
-    setTyping(false);
+    try {
+      const res = await fetch('http://localhost:5000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: text,
+          history: messages,
+          language: language === 'kn' ? 'hi' : language // Backend chat only supports 'en' or 'hi' currently
+        })
+      });
+      
+      const data = await res.json();
+      
+      const botMsg: Message = {
+        id: `b-${Date.now()}`,
+        text: data.text || "Sorry, I couldn't understand that.",
+        isUser: false,
+        ts: new Date(),
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (error) {
+      console.error(error);
+      const errorMsg: Message = {
+        id: `b-${Date.now()}`,
+        text: "Sorry, the AI service is currently unavailable.",
+        isUser: false,
+        ts: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setTyping(false);
+    }
   };
 
   const toggleListen = () => {
@@ -83,7 +102,7 @@ export default function AgriBot() {
     }
     
     const recognition = new SpeechRecognition();
-    recognition.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+    recognition.lang = language === 'hi' ? 'hi-IN' : language === 'kn' ? 'kn-IN' : 'en-IN';
     recognition.interimResults = false;
     
     recognition.onstart = () => {
@@ -137,7 +156,7 @@ export default function AgriBot() {
       });
   };
 
-  const starters = lang === 'hi' ? STARTERS_HI : STARTERS;
+  const starters = language === 'hi' ? STARTERS_HI : STARTERS;
 
   return (
     <>
@@ -220,7 +239,7 @@ export default function AgriBot() {
               <Bot size={20} color="white" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: '#f0fdf4' }}>AgriMandiBot</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#f0fdf4' }}>{t('AgriMandiBot')}</div>
               <div style={{ fontSize: 11, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span
                   style={{
@@ -236,7 +255,7 @@ export default function AgriBot() {
             </div>
             {/* Language toggle */}
             <button
-              onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
+              onClick={() => setGlobalLanguage(language === 'en' ? 'hi' : language === 'hi' ? 'kn' : 'en')}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
                 border: '1px solid rgba(255, 255, 255, 0.4)',
@@ -248,7 +267,7 @@ export default function AgriBot() {
                 cursor: 'pointer',
               }}
             >
-              {lang === 'en' ? 'हिं' : 'EN'}
+              {language.toUpperCase()}
             </button>
           </div>
 
@@ -340,7 +359,7 @@ export default function AgriBot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)}
-              placeholder={lang === 'hi' ? 'कुछ पूछें...' : 'Ask about prices, mandis...'}
+              placeholder={t('Type your message...')}
               className="input-field"
               style={{ fontSize: 13, padding: '9px 13px' }}
             />

@@ -1,62 +1,65 @@
-// ─── Auth Page ─────────────────────────────────────────────────────────────────
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Leaf, Phone, User, Globe, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { Leaf, Phone, User, ArrowLeft, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
-
-const LANGUAGES = [
-  { value: 'en', label: 'English', flag: '🇬🇧' },
-  { value: 'hi', label: 'हिंदी', flag: '🇮🇳' },
-  { value: 'kn', label: 'ಕನ್ನಡ', flag: '🇮🇳' },
-];
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function Auth() {
-  const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({
+  
+  const [signupForm, setSignupForm] = useState({
     name: '',
     phone: '',
-    language: 'en',
-    otp: '',
+    username: '',
+    password: '',
   });
 
-  const { user, login } = useAuth();
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+
+  const { user, login, signup } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isSignIn = searchParams.get('mode') !== 'signup';
 
   useEffect(() => {
     if (user) navigate('/home');
   }, [user, navigate]);
 
-  const handleChange = (field: string, value: string) => {
-    setForm((f) => ({ ...f, [field]: value }));
-    setError('');
-  };
-
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!form.name.trim()) { setError('Please enter your name.'); return; }
-    if (form.phone.replace(/\D/g, '').length < 10) { setError('Please enter a valid 10-digit phone number.'); return; }
+    if (!signupForm.phone.trim() || !signupForm.username.trim() || !signupForm.password.trim()) {
+      setError('Please fill in all fields.');
+      return;
+    }
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600)); // Simulate API call
-    setLoading(false);
-    setStep('OTP');
+    try {
+      await signup(signupForm.username, signupForm.password, signupForm.username, signupForm.phone);
+      navigate('/home');
+    } catch (err: any) {
+      setError(err.message || 'Signup failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (form.otp.length !== 4) { setError('Please enter the 4-digit OTP.'); return; }
-
+    if (!loginForm.username || !loginForm.password) { setError('Please fill in both fields.'); return; }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900)); // Simulate Verification
-    await login(form.phone, form.name, form.language);
-    setLoading(false);
-    navigate('/home');
+    try {
+      await login(loginForm.username, loginForm.password);
+      navigate('/home');
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,7 +88,7 @@ export default function Auth() {
             transition: 'color 0.2s',
           }}
         >
-          <ArrowLeft size={16} /> Back to home
+          <ArrowLeft size={16} /> {t('Back to home')}
         </Link>
 
         {/* Card */}
@@ -118,82 +121,150 @@ export default function Auth() {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              {step === 'PHONE' ? 'Welcome to AGRIPRICE' : 'Verify OTP'}
+              {isSignIn ? t('Log In') : t('Create Account')}
             </h1>
-            <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>
-              {step === 'PHONE'
-                ? 'Join 50,000+ farmers across India'
-                : `We sent a code to ${form.phone}`}
-            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 24, background: 'rgba(34,197,94,0.1)', padding: 4, borderRadius: 12 }}>
+            <button
+              type="button"
+              onClick={() => { setSearchParams({ mode: 'signup' }); setError(''); }}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                background: !isSignIn ? '#fff' : 'transparent',
+                color: !isSignIn ? '#15803d' : '#64748b',
+                boxShadow: !isSignIn ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {t('Sign Up')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSearchParams({ mode: 'signin' }); setError(''); }}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                background: isSignIn ? '#fff' : 'transparent',
+                color: isSignIn ? '#15803d' : '#64748b',
+                boxShadow: isSignIn ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {t('Sign In')}
+            </button>
           </div>
 
           {/* Form */}
-          {step === 'PHONE' ? (
-            <form onSubmit={handleSendOTP} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {isSignIn ? (
+            <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
-                  Full Name
+                  {t('Username')}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <User size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#4b5563' }} />
                   <input
-                    id="auth-name"
                     className="input-field"
                     style={{ paddingLeft: 38 }}
-                    placeholder="Ravi Kumar"
-                    value={form.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
+                    placeholder={t('Enter username')}
+                    value={loginForm.username}
+                    onChange={(e) => { setLoginForm(f => ({ ...f, username: e.target.value })); setError(''); }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
+                  {t('Password')}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <ShieldCheck size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#4b5563' }} />
+                  <input
+                    type="password"
+                    className="input-field"
+                    style={{ paddingLeft: 38 }}
+                    placeholder={t('Enter password')}
+                    value={loginForm.password}
+                    onChange={(e) => { setLoginForm(f => ({ ...f, password: e.target.value })); setError(''); }}
+                  />
+                </div>
+              </div>
+              
+              {error && (
+                <div style={{ padding: '10px 14px', background: 'rgba(248, 113, 113, 0.1)', border: '1px solid rgba(248, 113, 113, 0.2)', borderRadius: 8, color: '#f87171', fontSize: 13 }}>
+                  {error}
+                </div>
+              )}
+              
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading}
+                style={{ width: '100%', justifyContent: 'center', fontSize: 16, padding: '14px', marginTop: 12 }}
+              >
+                {loading ? t('Logging in...') : t('Log In')} <ArrowRight size={18} />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
+                  {t('Username')}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <User size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#4b5563' }} />
+                  <input
+                    className="input-field"
+                    style={{ paddingLeft: 38 }}
+                    placeholder={t('Enter username')}
+                    value={signupForm.username}
+                    onChange={(e) => { setSignupForm(f => ({ ...f, username: e.target.value })); setError(''); }}
                   />
                 </div>
               </div>
 
               <div>
                 <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
-                  Mobile Number
+                  {t('Contact')}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Phone size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#4b5563' }} />
                   <input
-                    id="auth-phone"
                     className="input-field"
                     style={{ paddingLeft: 38 }}
                     type="tel"
-                    placeholder="98765 43210"
-                    value={form.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
+                    placeholder={t('Mobile No.')}
+                    value={signupForm.phone}
+                    onChange={(e) => { setSignupForm(f => ({ ...f, phone: e.target.value })); setError(''); }}
                   />
                 </div>
               </div>
 
               <div>
                 <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6 }}>
-                  <Globe size={13} style={{ display: 'inline', marginRight: 4 }} />
-                  Preferred Language
+                  {t('Password')}
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                  {LANGUAGES.map((l) => (
-                    <button
-                      key={l.value}
-                      type="button"
-                      id={`auth-lang-${l.value}`}
-                      onClick={() => handleChange('language', l.value)}
-                      style={{
-                        padding: '10px 6px',
-                        border: `1.5px solid ${form.language === l.value ? '#22c55e' : 'rgba(34, 197, 94, 0.15)'}`,
-                        borderRadius: 10,
-                        background: form.language === l.value ? 'rgba(34, 197, 94, 0.12)' : 'transparent',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                        fontSize: 13,
-                        color: form.language === l.value ? '#4ade80' : '#64748b',
-                        fontWeight: form.language === l.value ? 600 : 400,
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <div style={{ fontSize: 18, marginBottom: 2 }}>{l.flag}</div>
-                      {l.label}
-                    </button>
-                  ))}
+                <div style={{ position: 'relative' }}>
+                  <ShieldCheck size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#4b5563' }} />
+                  <input
+                    type="password"
+                    className="input-field"
+                    style={{ paddingLeft: 38 }}
+                    placeholder={t('Enter password')}
+                    value={signupForm.password}
+                    onChange={(e) => { setSignupForm(f => ({ ...f, password: e.target.value })); setError(''); }}
+                  />
                 </div>
               </div>
 
@@ -205,7 +276,6 @@ export default function Auth() {
 
               <button
                 type="submit"
-                id="auth-send-otp"
                 className="btn-primary"
                 disabled={loading}
                 style={{
@@ -213,84 +283,15 @@ export default function Auth() {
                   justifyContent: 'center',
                   fontSize: 16,
                   padding: '14px',
-                  marginTop: 4,
-                  opacity: loading ? 0.7 : 1,
+                  marginTop: 12,
                 }}
               >
-                {loading ? 'Sending OTP...' : 'Get OTP →'}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOTP} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ fontSize: 13, color: '#86efac', fontWeight: 500, display: 'block', marginBottom: 6, textAlign: 'center' }}>
-                  Enter 4-digit code (Demo: Any 4 digits)
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <ShieldCheck size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#4b5563' }} />
-                  <input
-                    id="auth-otp"
-                    className="input-field"
-                    style={{ paddingLeft: 46, fontSize: 24, letterSpacing: '8px', textAlign: 'center' }}
-                    type="text"
-                    maxLength={4}
-                    placeholder="••••"
-                    value={form.otp}
-                    onChange={(e) => handleChange('otp', e.target.value.replace(/\D/g, ''))}
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <div style={{ padding: '10px 14px', background: 'rgba(248, 113, 113, 0.1)', border: '1px solid rgba(248, 113, 113, 0.2)', borderRadius: 8, color: '#f87171', fontSize: 13, textAlign: 'center' }}>
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                id="auth-verify-otp"
-                className="btn-primary"
-                disabled={loading || form.otp.length !== 4}
-                style={{
-                  width: '100%',
-                  justifyContent: 'center',
-                  fontSize: 16,
-                  padding: '14px',
-                  marginTop: 4,
-                  opacity: (loading || form.otp.length !== 4) ? 0.7 : 1,
-                }}
-              >
-                {loading ? 'Verifying...' : 'Verify & Sign In'}
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setStep('PHONE')}
-                style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 13, cursor: 'pointer', marginTop: 8 }}
-              >
-                Change Mobile Number
+                {loading ? t('Creating Account...') : t('Sign Up')} <ArrowRight size={18} />
               </button>
             </form>
           )}
         </div>
 
-        {/* Demo note */}
-        <div
-          style={{
-            marginTop: 16,
-            textAlign: 'center',
-            fontSize: 12,
-            color: '#374151',
-            padding: '10px 16px',
-            background: 'rgba(245, 158, 11, 0.06)',
-            border: '1px solid rgba(245, 158, 11, 0.15)',
-            borderRadius: 10,
-          }}
-        >
-          🔐 Demo mode: Any mobile number and OTP code will work. No real SMS is sent.
-        </div>
       </div>
     </div>
   );

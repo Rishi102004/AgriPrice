@@ -1,5 +1,5 @@
 // ─── App.tsx ───────────────────────────────────────────────────────────────────
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { AlertsProvider } from '@/lib/AlertsContext';
 import { LanguageProvider } from '@/lib/LanguageContext';
@@ -52,6 +52,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppLayout() {
+  const location = useLocation();
+  const hideBot = location.pathname === '/' || location.pathname === '/auth';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
@@ -104,7 +107,7 @@ function AppLayout() {
         </Routes>
       </main>
       <BottomNav />
-      <AgriBot />
+      {!hideBot && <AgriBot />}
     </div>
   );
 }

@@ -19,6 +19,7 @@ app.use('/api/mandis', require('./routes/mandiRoutes'));
 app.use('/api/prices', require('./routes/priceRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/alerts', require('./routes/alertRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

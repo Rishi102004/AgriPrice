@@ -7,17 +7,17 @@ import { useLanguage } from '@/lib/LanguageContext';
 export default function BottomNav() {
   const { user } = useAuth();
   const { alerts } = useAlerts();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
 
   if (!user) return null;
 
   const activeAlerts = alerts.filter((a) => a.is_active).length;
 
   const links = [
-    { to: '/home', icon: <Home size={20} />, label: language === 'hi' ? 'होम' : 'Home' },
-    { to: '/find-mandi', icon: <MapPin size={20} />, label: language === 'hi' ? 'मंडी खोजें' : 'Find Mandi' },
-    { to: '/alerts', icon: <Bell size={20} />, label: language === 'hi' ? 'अलर्ट' : 'Alerts', count: activeAlerts },
-    { to: '/profile', icon: <User size={20} />, label: language === 'hi' ? 'प्रोफ़ाइल' : 'Profile' },
+    { to: '/home', icon: <Home size={20} />, label: t('Home') },
+    { to: '/find-mandi', icon: <MapPin size={20} />, label: t('Find Mandi') },
+    { to: '/alerts', icon: <Bell size={20} />, label: t('Alerts'), count: activeAlerts },
+    { to: '/profile', icon: <User size={20} />, label: t('Profile') },
   ];
 
   return (

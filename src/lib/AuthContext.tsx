@@ -7,13 +7,15 @@ export interface UserProfile {
   phone: string;
   language: string;
   home_mandi_id: string;
+  state: string;
   district: string;
 }
 
 interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
-  login: (phone: string, name: string, language: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  signup: (username: string, password: string, name: string, phone: string) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
@@ -32,19 +34,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (phone: string, name: string, language: string) => {
+  const login = async (username: string, password: string) => {
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify({ username, password })
       });
-      if (!res.ok) throw new Error('Login failed');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Login failed');
+      }
       const userData = await res.json();
       setUser(userData);
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
     } catch (err) {
       console.error(err);
+      throw err;
+    }
+  };
+
+  const signup = async (username: string, password: string, name: string, phone: string) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, name, phone })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Signup failed');
+      }
+      const userData = await res.json();
+      setUser(userData);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   };
 
@@ -72,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

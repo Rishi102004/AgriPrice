@@ -45,7 +45,8 @@ export default function MandiFinder() {
         setUserLoc({ lat, lng });
         
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&email=agriprice.demo@example.com`);
+          if (!res.ok) throw new Error('Geocoding failed with status ' + res.status);
           const data = await res.json();
           if (data?.address?.state) {
             let stateName = data.address.state;
@@ -56,6 +57,7 @@ export default function MandiFinder() {
           }
         } catch (e) {
           console.error("Geocoding failed", e);
+          setLocError('Location detected but state name could not be resolved.');
         }
 
         setLocating(false);
@@ -156,6 +158,12 @@ export default function MandiFinder() {
             <Crosshair size={16} />
             {locating ? t('Locating...') : userLoc ? t('Location Active') : t('Use Live Location')}
           </button>
+
+          {locError && (
+            <div style={{ color: '#ef4444', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {locError}
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {STATE_FILTERS.map((s) => (

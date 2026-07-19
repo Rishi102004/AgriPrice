@@ -1,7 +1,7 @@
 // ─── Navbar ────────────────────────────────────────────────────────────────────
 import { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { Leaf, Home, MapPin, Bell, User, LogOut, Menu, X, TrendingUp } from 'lucide-react';
+import { Leaf, Home, MapPin, Bell, User, LogOut, Menu, X, TrendingUp, Globe } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useAlerts } from '@/lib/AlertsContext';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -9,7 +9,7 @@ import { useLanguage } from '@/lib/LanguageContext';
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { alerts } = useAlerts();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -22,10 +22,10 @@ export default function Navbar() {
 
   const navLinks = user
     ? [
-        { to: '/home',       label: 'Dashboard',   icon: <Home size={16} /> },
-        { to: '/find-mandi', label: 'Find Mandi',  icon: <MapPin size={16} /> },
-        { to: '/alerts',     label: 'Alerts',      icon: <Bell size={16} /> },
-        { to: '/profile',    label: 'Profile',     icon: <User size={16} /> },
+        { to: '/home',       label: t('Dashboard'),   icon: <Home size={16} /> },
+        { to: '/find-mandi', label: t('Find Mandi'),  icon: <MapPin size={16} /> },
+        { to: '/alerts',     label: t('Alerts'),      icon: <Bell size={16} /> },
+        { to: '/profile',    label: t('Profile'),     icon: <User size={16} /> },
       ]
     : [];
 
@@ -127,46 +127,6 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {user ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #15803d, #059669)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: '#fff',
-                  }}
-                >
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <span style={{ fontSize: 14, color: '#86efac', fontWeight: 500, display: 'none' }}>
-                  {user.name}
-                </span>
-              </div>
-              <button
-                onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '7px 12px',
-                  background: 'var(--color-surface2)',
-                  color: 'var(--color-text-primary)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  transition: 'all 0.2s',
-                }}
-              >
-                {language === 'en' ? 'अ' : 'A'}
-              </button>
               <button
                 onClick={handleLogout}
                 style={{
@@ -185,20 +145,10 @@ export default function Navbar() {
                 }}
               >
                 <LogOut size={14} />
-                <span className="desktop-only">Logout</span>
+                <span className="desktop-only">{t('Logout')}</span>
               </button>
             </>
-          ) : (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Link to="/auth" className="btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
-                Sign In
-              </Link>
-              <Link to="/auth?mode=signup" className="btn-primary" style={{ padding: '8px 16px', fontSize: 13 }}>
-                <TrendingUp size={14} />
-                Get Started
-              </Link>
-            </div>
-          )}
+          ) : null}
 
           {/* Removed old mobile menu toggle since it's on the left now */}
         </div>

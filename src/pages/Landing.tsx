@@ -1,10 +1,13 @@
 // ─── Landing Page ──────────────────────────────────────────────────────────────
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   TrendingUp, MapPin, Bell, MessageCircle, BarChart2, Shield,
   ArrowRight, Leaf, ChevronRight
 } from 'lucide-react';
 import { COMMODITIES, MANDIS, TODAY_PRICES } from '@/lib/mockData';
+import { useLanguage } from '@/lib/LanguageContext';
+import { useAuth } from '@/lib/AuthContext';
 
 const features = [
   {
@@ -53,6 +56,8 @@ const stats = [
 ];
 
 export default function Landing() {
+  const { t } = useLanguage();
+
 
 
   return (
@@ -86,7 +91,7 @@ export default function Landing() {
           className="animate-fade-up"
         >
           <Leaf size={14} />
-          India's #1 Agricultural Price Intelligence Platform
+          {t('India\'s #1 Agricultural Price Intelligence Platform')}
         </div>
 
         <h1
@@ -99,8 +104,8 @@ export default function Landing() {
             margin: '0 0 24px',
           }}
         >
-          Know Your Price,{' '}
-          <span className="gradient-text">Grow Your Profit.</span>
+          {t('Know Your Price,')}{' '}
+          <span className="gradient-text">{t('Grow Your Profit.')}</span>
         </h1>
 
         <p
@@ -113,19 +118,19 @@ export default function Landing() {
             lineHeight: 1.7,
           }}
         >
-          Real-time mandi prices, AI-powered crop insights, and smart alerts — designed for
-          Indian farmers and agricultural traders.
+          {t('Real-time mandi prices, AI-powered crop insights, and smart alerts — designed for Indian farmers and agricultural traders.')}
         </p>
 
         <div
           className="animate-fade-up animate-delay-300"
-          style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}
+          style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12 }}
         >
-          <Link to="/auth?mode=signup" className="btn-primary" style={{ fontSize: 17, padding: '14px 36px' }}>
-            Get Started Free <ArrowRight size={18} />
-          </Link>
-          <Link to="/auth" className="btn-ghost" style={{ fontSize: 17, padding: '14px 36px' }}>
-            Check Live Prices <ChevronRight size={18} />
+          <Link
+            to="/auth"
+            className="btn-primary"
+            style={{ padding: '14px 28px', fontSize: 16 }}
+          >
+            {t('Get Started')} <ArrowRight size={18} />
           </Link>
         </div>
 
@@ -161,63 +166,12 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── LIVE PRICES PREVIEW ── */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 60px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h2 className="section-title">Today's Market Rates</h2>
-          <p style={{ color: '#64748b', fontSize: 15 }}>Live prices from {MANDIS[0].name}</p>
-        </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {COMMODITIES.map((c) => {
-            const price = TODAY_PRICES.find((p) => p.commodity_id === c.id && p.mandi_id === MANDIS[0].id);
-            const pct = c.id === '11111111-1111-1111-1111-111111111111' ? 2.27 :
-                        c.id === '44444444-4444-4444-4444-444444444444' ? -8.57 :
-                        (Math.random() * 6 - 3);
-            const up = pct >= 0;
-            return (
-              <Link
-                key={c.id}
-                to={`/auth`}
-                className="glass-card"
-                style={{ padding: '20px', textDecoration: 'none', display: 'block' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ fontSize: 28, marginBottom: 6 }}>{c.emoji}</div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)' }}>{c.name}</div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{c.name_hi} · {c.name_kn}</div>
-                  </div>
-                  <span className={`badge ${up ? 'badge-green' : 'badge-red'}`}>
-                    {up ? '▲' : '▼'} {Math.abs(pct).toFixed(1)}%
-                  </span>
-                </div>
-                <div style={{ marginTop: 14, display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontSize: 24, fontWeight: 800, color: '#4ade80' }}>
-                    ₹{price?.price ?? '—'}
-                  </span>
-                  <span style={{ fontSize: 13, color: '#64748b' }}>/{price?.unit ?? c.unit}</span>
-                </div>
-                <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>
-                  {MANDIS[0].name}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
       {/* ── FEATURES ── */}
       <section style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 80px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <h2 className="section-title">Everything You Need to Sell Smarter</h2>
+          <h2 className="section-title">{t('Everything You Need to Sell Smarter')}</h2>
           <p className="section-subtitle" style={{ marginBottom: 0 }}>
-            Powerful tools designed for the modern Indian farmer
+            {t('Powerful tools designed for the modern Indian farmer')}
           </p>
         </div>
         <div
@@ -256,32 +210,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section
-        style={{
-          textAlign: 'center',
-          padding: '60px 24px 80px',
-          background: 'linear-gradient(180deg, transparent, rgba(21, 128, 61, 0.08))',
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: 'Poppins, sans-serif',
-            fontSize: 'clamp(28px, 5vw, 48px)',
-            fontWeight: 800,
-            margin: '0 0 16px',
-            color: 'var(--color-text-primary)',
-          }}
-        >
-          Ready to earn more from your crops?
-        </h2>
-        <p style={{ color: '#64748b', fontSize: 16, marginBottom: 36 }}>
-          Join 50,000+ farmers using AGRIPRICE to make smarter selling decisions.
-        </p>
-        <Link to="/auth?mode=signup" className="btn-primary" style={{ fontSize: 18, padding: '16px 48px' }}>
-          Start For Free <ArrowRight size={20} />
-        </Link>
-      </section>
 
       {/* Footer */}
       <footer
